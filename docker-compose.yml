@@ -1,0 +1,45 @@
+services:
+  gtwy:
+    container_name: gtwy
+    image: python:3.10.14-alpine3.19
+    ports:
+      - "8044:4044"
+    volumes:
+      - ./gateway:/app/gateway
+    working_dir: /app/gateway
+    depends_on:
+      - api
+    networks:
+      - gateway-pattern
+    entrypoint: ["sh", "-c", "./start.sh"]
+    environment:
+      - SECRET_API_KEY=local1234
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=4044
+      - FLASK_DEBUG=1
+      - URL_API=http://api:5055
+
+  api:
+    container_name: api
+    image: python:3.10.14-alpine3.19
+    ports:
+      - "8055:5055"
+    volumes:
+      - ./api:/app/api
+    working_dir: /app/api
+    networks:
+      - gateway-pattern
+    entrypoint: ["sh", "-c", "./start.sh"]
+    environment:
+      - SECRET_API_KEY=local1234
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5055
+      - FLASK_DEBUG=1
+
+
+networks:
+  gateway-pattern:
