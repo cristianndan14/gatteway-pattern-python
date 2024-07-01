@@ -3,7 +3,7 @@ import requests
 from flask import current_app, request
 
 
-class RequestHelper:
+class RequestProxy:
     VALID_METHODS = ['GET', 'POST', 'PUT',
                      'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
 
@@ -12,21 +12,20 @@ class RequestHelper:
 
     def execute(
             self,
-            method: str,
             url: str,
             path: str = "",
-            headers: dict = None,
-            json_data: dict = None,
-            params: dict = None
+            headers: dict = None
     ):
         start_request = time.time()
 
         try:
             _url = url + path
             _header = self.build_headers(headers)
-            _method = self.validate_method(method)
+            _method = self.validate_method(request.method)
+            json_data = request.json if request.json else None
+            params = None
             current_app.logger.info(
-                f"Enviando solicitud: METHOD '{method}' - URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}")
+                f"Enviando solicitud: METHOD '{request.method}' - URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}")
 
             response = _method(
                 url=_url,
@@ -56,7 +55,7 @@ class RequestHelper:
             end_request = time.time()
             elapsed_time = end_request - start_request
             current_app.logger.info(
-                f"Solicitud ejecutada: METHOD '{method}' - URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}. Tiempo transcurrido: {elapsed_time:.2f} segundos.")
+                f"Solicitud ejecutada: METHOD '{request.method}' - URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}. Tiempo transcurrido: {elapsed_time:.2f} segundos.")
 
     def validate_method(self, method: str):
         try:

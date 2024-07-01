@@ -12,7 +12,9 @@ def hello_world():
 
 @app.route("/custom-message", methods=["POST"])
 def custom_hello_world():
-    return {"message": f"{0}!".format(custom_msg=request.get_json["message"])}
+    custom_msg = request.json.get("message", None)
+    msg_info = "Porfavor ingrese su mensaje dentro del campo 'message' en formato JSON."
+    return {"message": f"{custom_msg if custom_msg else msg_info}!"}
 
 
 @app.route("/<language>", methods=["GET"])

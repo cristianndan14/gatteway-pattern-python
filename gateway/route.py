@@ -14,6 +14,8 @@ def api():
                            view_func=hello_controller.get_services_path, methods=['GET'])
     api_hello.add_url_rule('/<path>',
                            view_func=hello_controller.post_services, methods=['POST'])
+    # api_hello.add_url_rule('/<path>',
+    #                        view_func=hello_controller.proxy_services, methods=['POST', 'GET', 'PUT', 'DELETE'])
 
 
 api()
