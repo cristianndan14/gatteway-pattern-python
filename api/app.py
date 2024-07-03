@@ -1,37 +1,45 @@
-from flask import Flask, request
+import logging
+import os
+from flask import Flask, jsonify
+from route import api_hello
+from model import db
+from sqlalchemy.exc import SQLAlchemyError
 
 
 app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE_URI", None)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["DB_INITIALIZED"] = False  # Inicialmente, establecer como False
+
+# Configurar el logger
+logging.basicConfig(level=logging.INFO)
+app.logger.setLevel(logging.INFO)
+
+# Intentar inicializar la base de datos
+if app.config["SQLALCHEMY_DATABASE_URI"]:
+    try:
+        app.logger.info("Starting database...")
+        db.init_app(app)
+        with app.app_context():
+            db.create_all()  # Intentar crear las tablas para verificar la conexión
+        app.config["DB_INITIALIZED"] = True
+        app.logger.info("Database initialized successfully.")
+    except SQLAlchemyError as e:
+        app.logger.error(f"Failed to connect to the database: {e}")
+else:
+    app.logger.warning("No database connection string provided. Continuing without database...")
+
+
+app.logger.info("Starting blueprints...")
+app.register_blueprint(api_hello)
 
 
 @app.route("/alive", methods=["GET"])
 @app.route("/", methods=["GET"])
-def hello_world():
-    return {"message": "api is alive!"}
-
-
-@app.route("/custom-message", methods=["POST"])
-def custom_hello_world():
-    custom_msg = request.json.get("message", None)
-    msg_info = "Porfavor ingrese su mensaje dentro del campo 'message' en formato JSON."
-    return {"message": f"{custom_msg if custom_msg else msg_info}!"}
-
-
-@app.route("/<language>", methods=["GET"])
-def choose_language(language):
-    en = "Hello World!"
-    es = "Hola Mundo!"
-    ja = "こんにちは、世界！ (Konnichiwa, sekai!)"
-    fr = "Bonjour, le monde!"
-    pt = "Olá, mundo!"
-
-    languages = {"en": en, "es": es, "ja": ja, "fr": fr, "pt": pt}
-
-    if language in languages.keys():
-        return {"message": languages[language]}
-    else:
-        return {"message": "Please, input a valid language: en/es/ja/fr/pt)"}
+def alive():
+    return jsonify({"message": "api is alive!"}, 200)
 
 
 if __name__ == "__main__":
     app.run()
+    app.logger.info("Starting api_hello...")

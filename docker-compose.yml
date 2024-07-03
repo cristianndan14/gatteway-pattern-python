@@ -31,7 +31,12 @@ services:
     working_dir: /app/api
     networks:
       - gateway-pattern
-    entrypoint: ["sh", "-c", "./start.sh"]
+    entrypoint: >
+      sh -c "
+        apk update &&
+        apk add --no-cache gcc musl-dev mariadb-connector-c-dev && 
+        ./start.sh
+      "
     environment:
       - SECRET_API_KEY=local1234
       - FLASK_APP=app.py
@@ -39,6 +44,25 @@ services:
       - FLASK_HOST=0.0.0.0
       - FLASK_PORT=5055
       - FLASK_DEBUG=1
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://root:root@dbmysql/clients_db
+    depends_on:
+      - dbmysql
+
+  dbmysql:
+    container_name: dbmysql
+    image: mysql:8.0
+    ports:
+      - "8006:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - 'dbmysql_data:/var/lib/mysql'
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - gateway-pattern
+
+volumes:
+  dbmysql_data:
 
 
 networks:

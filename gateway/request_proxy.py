@@ -23,39 +23,41 @@ class RequestProxy:
             _header = self.build_headers(headers)
             _method = self.validate_method(request.method)
             json_data = request.json if request.json else None
-            params = None
             current_app.logger.info(
-                f"Enviando solicitud: METHOD '{request.method}' - URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}")
+                "Sending request with: METHOD '%s' - URL '%s' - Header '%s' - Body: '%s'",
+                request.method, _url, _header, json_data)
 
             response = _method(
                 url=_url,
                 headers=_header or {},
-                json=json_data,
-                params=params
+                json=json_data
             )
-            response.raise_for_status()
-            return response.json()
+            return response.json(), response.status_code
 
         except ValueError as value_err:
             current_app.logger.error(
-                f"Valor no válido: '{value_err}'. URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}")
+                "Value error: '%s'. URL '%s' - Header '%s' - Body: %s",
+                value_err, _url, _header, json_data)
             return {"code": 400, "message": str(value_err), "data": []}
 
         except requests.exceptions.HTTPError as http_err:
             current_app.logger.error(
-                f"HTTP error: '{http_err}'. URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}")
+                "HTTP error: '%s'. URL '%s' - Header '%s' - Body: %s",
+                http_err, _url, _header, json_data)
             return {"code": response.status_code, "message": str(http_err), "data": []}
 
         except requests.exceptions.RequestException as req_err:
             current_app.logger.error(
-                f"Request error: '{req_err}'. URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}")
+                "Request error: '%s'. URL '%s' - Header '%s' - Body: %s",
+                req_err, _url, _header, json_data)
             return {"code": 500, "message": str(req_err), "data": []}
 
         finally:
             end_request = time.time()
             elapsed_time = end_request - start_request
             current_app.logger.info(
-                f"Solicitud ejecutada: METHOD '{request.method}' - URL '{_url}' - Header '{_header}' - Body: {json_data} - Params: {params}. Tiempo transcurrido: {elapsed_time:.2f} segundos.")
+                "Request executed with: METHOD '%s' - URL '%s' - Header '%s' - Body: '%s'. Elapsed time: '%.2f' seconds.",
+                request.method, _url, _header, json_data, elapsed_time)
 
     def validate_method(self, method: str):
         try:

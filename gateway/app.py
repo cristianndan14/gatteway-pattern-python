@@ -1,5 +1,5 @@
 import logging
-from flask import Flask
+from flask import Flask, jsonify
 from route import api_hello
 
 
@@ -9,16 +9,17 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 app.logger.setLevel(logging.INFO)
 
-app.logger.info("Iniciando blueprints")
+app.logger.info("Starting blueprints...")
 app.register_blueprint(api_hello)
 
 
 @app.route("/alive", methods=["GET"])
 @app.route("/", methods=["GET"])
 def hello_world():
-    return {"message": "gateway is alive!"}
+    return jsonify(
+        {"message": "gateway is alive!"}, 200)
 
 
 if __name__ == "__main__":
-    app.logger.info("Iniciando aplicacion")
     app.run()
+    app.logger.info("Starting gateway...")
